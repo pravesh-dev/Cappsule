@@ -17,7 +17,17 @@ function App() {
   };
 
   const [textInput, setTextInput] = useState("");
+  const [height, setHeight] = useState('4.5rem')
   const isSearched = false;
+  const [isHidden, setIsHidden] = useState(true);
+  const handleShowMore = () =>{
+    setHeight('auto')
+    setIsHidden(false)
+  }
+  const handleHideMore = () =>{
+    setHeight('4.5rem')
+    setIsHidden(true)
+  }
 
   return (
     <div className="w-full min-h-screen flex gap-10 flex-col items-center py-14">
@@ -58,9 +68,9 @@ function App() {
                 className="w-full min-h-52 bg-gradient-to-r from-white to-blue-200/40 shadow-[0_0_13px_#00000028] rounded-2xl flex justify-between p-8"
               >
                 <div className="min-h-full w-[30%] flex flex-col gap-3 justify-between">
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 border relative">
                     <h3 className="w-20 text-black/90 mt-1">Form:</h3>
-                    <div className={`w-52 flex gap-1 flex-wrap ${salt.available_forms.length > 4 ? 'h-[4.5rem] border overflow-hidden' : 'border-none'}`}>
+                    <div className={`w-52 flex gap-1 flex-wrap ${salt.available_forms.length > 4 ? `h-[${height}] border overflow-hidden` : 'border-none'}`}>
                       {salt.available_forms.map((form, formIndex) => (
                         <button
                           key={formIndex}
@@ -70,6 +80,8 @@ function App() {
                         </button>
                       ))}
                     </div>
+                    <button className={`absolute left-full bottom-0 text-blue-900 font-bold ${salt.available_forms.length > 4 ? 'block' : 'hidden'}  ${isHidden ? 'block' : 'hidden'}`} onClick={handleShowMore}>more..</button>
+                    <button className={`absolute left-full bottom-0 text-blue-900 font-bold ${salt.available_forms.length > 4 ? 'block' : 'hidden'} ${isHidden ? 'hidden' : 'block'}`} onClick={handleHideMore}>hide..</button>
                   </div>
                   <div className="flex gap-4">
                     <h3 className="w-20 text-black/90 mt-1">Strength:</h3>

@@ -9,14 +9,17 @@ function App() {
   const [selectedValues, setSelectedValues] = useState({});
   const [formHeights, setFormHeights] = useState({});
   const [strengthHeights, setStrengthHeights] = useState({});
+  const [packagingHeights, setPackagingHeights] = useState({});
   const [isFormHidden, setIsFormHidden] = useState({});
   const [isStrengthHidden, setIsStrengthHidden] = useState({});
+  const [isPackagingHidden, setIsPackagingHidden] = useState({});
 
   const getData = async () => {
     let url = "https://backend.cappsule.co.in/api/v1/new_search?q=";
     let response = await fetch(`${url}paracetamol&pharmacyIds=1,2,3`);
     let data = await response.json();
     setSalts(data.data.saltSuggestions);
+    console.log(data.data.saltSuggestions)
   };
 
   useEffect(() => {
@@ -29,8 +32,10 @@ function App() {
     const initialValues = {};
     const initialFormHeights = {};
     const initialStrengthHeights = {};
+    const initialPackagingHeights = {};
     const initialIsFormHidden = {};
     const initialIsStrengthHidden = {};
+    const initialIsPackagingHidden = {};
     
     salts.forEach((salt, index) => {
       const firstForm = Object.keys(salt.salt_forms_json)[0];
@@ -44,15 +49,19 @@ function App() {
       };
       initialFormHeights[index] = "4.5rem";
       initialStrengthHeights[index] = "4.5rem";
+      initialPackagingHeights[index] = "4.5rem";
       initialIsFormHidden[index] = true;
       initialIsStrengthHidden[index] = true;
+      initialIsPackagingHidden[index] = true;
     });
 
     setSelectedValues(initialValues);
     setFormHeights(initialFormHeights);
     setStrengthHeights(initialStrengthHeights);
+    setPackagingHeights(initialPackagingHeights);
     setIsFormHidden(initialIsFormHidden);
     setIsStrengthHidden(initialIsStrengthHidden);
+    setIsPackagingHidden(initialIsPackagingHidden);
   };
 
   const handleShowMore = (index, type) => {
@@ -62,6 +71,9 @@ function App() {
     } else if (type === "strength") {
       setStrengthHeights((prev) => ({ ...prev, [index]: "auto" }));
       setIsStrengthHidden((prev) => ({ ...prev, [index]: false }));
+    } else if (type === "packaging") {
+      setPackagingHeights((prev) => ({ ...prev, [index]: "auto" }));
+      setIsPackagingHidden((prev) => ({ ...prev, [index]: false }));
     }
   };
 
@@ -72,6 +84,9 @@ function App() {
     } else if (type === "strength") {
       setStrengthHeights((prev) => ({ ...prev, [index]: "4.5rem" }));
       setIsStrengthHidden((prev) => ({ ...prev, [index]: true }));
+    } else if (type === "packaging") {
+      setPackagingHeights((prev) => ({ ...prev, [index]: "4.5rem" }));
+      setIsPackagingHidden((prev) => ({ ...prev, [index]: true }));
     }
   };
 
@@ -95,6 +110,20 @@ function App() {
         className="px-2 py-1 text-sm border-2 border-black rounded-lg font-semibold"
       >
         {strength}
+      </button>
+    ));
+  };
+
+  const renderPackagings = (salt, index) => {
+    if (!selectedValues[index]) return null;
+    const form = selectedValues[index].form;
+    const strength = selectedValues[index].strength;
+    return Object.keys(salt.salt_forms_json[form][strength]).map((packaging, packagingIndex) => (
+      <button
+        key={packagingIndex}
+        className="px-2 py-1 text-sm border-2 border-black rounded-lg font-semibold"
+      >
+        {packaging}
       </button>
     ));
   };
@@ -139,14 +168,14 @@ function App() {
                   <h3 className="w-20 text-black/90 mt-1">Form:</h3>
                   <div
                     className={`w-52 flex gap-2 flex-wrap ${
-                      salt.available_forms.length > 4 && `h-[${formHeights[index]}] overflow-hidden`
+                      Object.keys(salt.salt_forms_json).length > 4 && `h-[${formHeights[index]}] overflow-hidden`
                     }`}
                   >
                     {renderForms(salt, index)}
                   </div>
                   <button
                     className={`absolute left-full bottom-0 text-blue-900 font-bold ${
-                      salt.available_forms.length > 4 ? "block" : "hidden"
+                      Object.keys(salt.salt_forms_json).length > 4 ? "block" : "hidden"
                     }  ${isFormHidden[index] ? "block" : "hidden"}`}
                     onClick={() => handleShowMore(index, "form")}
                   >
@@ -154,7 +183,7 @@ function App() {
                   </button>
                   <button
                     className={`absolute left-full bottom-0 text-blue-900 font-bold ${
-                      salt.available_forms.length > 4 ? "block" : "hidden"
+                      Object.keys(salt.salt_forms_json).length > 4 ? "block" : "hidden"
                     } ${isFormHidden[index] ? "hidden" : "block"}`}
                     onClick={() => handleHideMore(index, "form")}
                   >
@@ -164,7 +193,7 @@ function App() {
                 <div className="flex gap-4 relative">
                   <h3 className="w-20 text-black/90 mt-1">Strength:</h3>
                   <div
-                    className={`w-52 flex gap-1 flex-wrap ${
+                    className={`w-52 flex gap-1 flex-wrap duration-300 ${
                       Object.keys(salt.salt_forms_json[selectedValues[index]?.form] || {}).length > 4 &&
                       `h-[${strengthHeights[index]}] overflow-hidden py-1`
                     }`}
@@ -188,16 +217,32 @@ function App() {
                     hide..
                   </button>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex gap-4 relative">
                   <h3 className="w-20 text-black/90 mt-1">Packaging:</h3>
-                  <div className=" w-52 flex gap-1 flex-wrap">
-                    <button className="px-2 py-1 text-sm border-2 border-black rounded-lg font-semibold">
-                      5 strips
-                    </button>
-                    <button className="px-3 py-1 text-sm border-2 border-black rounded-lg font-semibold">
-                      10 strips
-                    </button>
+                  <div
+                    className={`w-52 flex gap-1 flex-wrap duration-300 ${
+                      Object.keys(salt.salt_forms_json[selectedValues[index]?.form]?.[selectedValues[index]?.strength] || {}).length > 4 &&
+                      `h-[${packagingHeights[index]}] overflow-hidden py-1`
+                    }`}
+                  >
+                    {renderPackagings(salt, index)}
                   </div>
+                  <button
+                    className={`absolute left-full bottom-0 text-blue-900 font-bold ${
+                      Object.keys(salt.salt_forms_json[selectedValues[index]?.form]?.[selectedValues[index]?.strength] || {}).length > 4 ? "block" : "hidden"
+                    }  ${isPackagingHidden[index] ? "block" : "hidden"}`}
+                    onClick={() => handleShowMore(index, "packaging")}
+                  >
+                    more..
+                  </button>
+                  <button
+                    className={`absolute left-full bottom-0 text-blue-900 font-bold ${
+                      Object.keys(salt.salt_forms_json[selectedValues[index]?.form]?.[selectedValues[index]?.strength] || {}).length > 4 ? "block" : "hidden"
+                    } ${isPackagingHidden[index] ? "hidden" : "block"}`}
+                    onClick={() => handleHideMore(index, "packaging")}
+                  >
+                    hide..
+                  </button>
                 </div>
               </div>
               <div className="min-h-full w-[25%] flex flex-col justify-center items-center">

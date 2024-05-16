@@ -36,12 +36,12 @@ function App() {
     const initialIsFormHidden = {};
     const initialIsStrengthHidden = {};
     const initialIsPackagingHidden = {};
-    
+
     salts.forEach((salt, index) => {
       const firstForm = Object.keys(salt.salt_forms_json)[0];
       const firstStrength = Object.keys(salt.salt_forms_json[firstForm])[0];
       const firstPackaging = Object.keys(salt.salt_forms_json[firstForm][firstStrength])[0];
-      
+
       initialValues[index] = {
         form: firstForm,
         strength: firstStrength,
@@ -66,16 +66,70 @@ function App() {
 
   const handleShowMore = (index, type) => {
     if (type === "form") {
+      const firstForm = Object.keys(salts[index].salt_forms_json)[0];
+      const firstStrength = Object.keys(salts[index].salt_forms_json[firstForm])[0];
+      const firstPackaging = Object.keys(salts[index].salt_forms_json[firstForm][firstStrength])[0];
+  
+      setSelectedValues((prev) => ({
+        ...prev,
+        [index]: { form: firstForm, strength: firstStrength, packaging: firstPackaging }
+      }));
       setFormHeights((prev) => ({ ...prev, [index]: "auto" }));
       setIsFormHidden((prev) => ({ ...prev, [index]: false }));
     } else if (type === "strength") {
+      const firstStrength = Object.keys(salts[index].salt_forms_json[selectedValues[index].form])[0];
+      setSelectedValues((prev) => ({
+        ...prev,
+        [index]: { ...prev[index], strength: firstStrength, packaging: "" }
+      }));
       setStrengthHeights((prev) => ({ ...prev, [index]: "auto" }));
       setIsStrengthHidden((prev) => ({ ...prev, [index]: false }));
     } else if (type === "packaging") {
+      const firstPackaging = Object.keys(salts[index].salt_forms_json[selectedValues[index].form][selectedValues[index].strength])[0];
+      setSelectedValues((prev) => ({
+        ...prev,
+        [index]: { ...prev[index], packaging: firstPackaging }
+      }));
       setPackagingHeights((prev) => ({ ...prev, [index]: "auto" }));
       setIsPackagingHidden((prev) => ({ ...prev, [index]: false }));
     }
   };
+  
+
+  // const resetSubsequentSelections = (index, type) => {
+  //   if (type === "form") {
+  //     const firstForm = Object.keys(salts[index].salt_forms_json)[0];
+  //     const firstStrength = Object.keys(salts[index].salt_forms_json[firstForm])[0];
+  //     const firstPackaging = Object.keys(salts[index].salt_forms_json[firstForm][firstStrength])[0];
+  
+  //     setSelectedValues((prev) => ({
+  //       ...prev,
+  //       [index]: { form: firstForm, strength: firstStrength, packaging: firstPackaging }
+  //     }));
+  //     setStrengthHeights((prev) => ({ ...prev, [index]: "4.5rem" }));
+  //     setPackagingHeights((prev) => ({ ...prev, [index]: "4.5rem" }));
+  //     setIsStrengthHidden((prev) => ({ ...prev, [index]: true }));
+  //     setIsPackagingHidden((prev) => ({ ...prev, [index]: true }));
+  //   } else if (type === "strength") {
+  //     const firstStrength = Object.keys(salts[index].salt_forms_json[selectedValues[index].form])[0];
+  //     const firstPackaging = Object.keys(salts[index].salt_forms_json[selectedValues[index].form][firstStrength])[0];
+  
+  //     setSelectedValues((prev) => ({
+  //       ...prev,
+  //       [index]: { ...prev[index], strength: firstStrength, packaging: firstPackaging }
+  //     }));
+  //     setPackagingHeights((prev) => ({ ...prev, [index]: "4.5rem" }));
+  //     setIsPackagingHidden((prev) => ({ ...prev, [index]: true }));
+  //   } else if (type === "packaging") {
+  //     const firstPackaging = Object.keys(salts[index].salt_forms_json[selectedValues[index].form][selectedValues[index].strength])[0];
+  
+  //     setSelectedValues((prev) => ({
+  //       ...prev,
+  //       [index]: { ...prev[index], packaging: firstPackaging }
+  //     }));
+  //   }
+  // };
+  
 
   const handleHideMore = (index, type) => {
     if (type === "form") {
@@ -94,48 +148,69 @@ function App() {
     return Object.keys(salt.salt_forms_json).map((key, formIndex) => (
       <button
         key={formIndex}
-        className="px-3 py-1 text-sm border-2 border-black rounded-lg font-semibold"
+        className={`px-3 py-1 text-sm border-2 rounded-lg font-semibold ${selectedValues[index]?.form === key ? 'border-black' : 'border-black/30'}`}
+        onClick={() => {
+          const firstStrength = Object.keys(salt.salt_forms_json[key])[0];
+          const firstPackaging = Object.keys(salt.salt_forms_json[key][firstStrength])[0];
+          setSelectedValues((prev) => ({
+            ...prev,
+            [index]: { form: key, strength: firstStrength, packaging: firstPackaging }
+          }));
+        }}
       >
         {key}
       </button>
     ));
   };
-
+  
+  
   const renderStrengths = (salt, index) => {
-    if (!selectedValues[index]) return null;
+    if (!selectedValues[index] || !selectedValues[index].form) return null;
     const form = selectedValues[index].form;
-    return Object.keys(salt.salt_forms_json[form]).map((strength, strengthIndex) => (
+    return Object.keys(salt.salt_forms_json[form] || {}).map((strength, strengthIndex) => (
       <button
         key={strengthIndex}
-        className="px-2 py-1 text-sm border-2 border-black rounded-lg font-semibold"
+        className={`px-2 py-1 text-sm border-2 rounded-lg font-semibold ${selectedValues[index]?.strength === strength ? 'border-black' : 'border-black/30'}`}
+        onClick={() => {
+          setSelectedValues((prev) => ({ ...prev, [index]: { ...prev[index], strength } }));
+        }}
       >
         {strength}
       </button>
     ));
   };
-
+  
   const renderPackagings = (salt, index) => {
-    if (!selectedValues[index]) return null;
+    if (!selectedValues[index] || !selectedValues[index].form || !selectedValues[index].strength) return null;
     const form = selectedValues[index].form;
     const strength = selectedValues[index].strength;
-    return Object.keys(salt.salt_forms_json[form][strength]).map((packaging, packagingIndex) => (
-      <button
-        key={packagingIndex}
-        className="px-2 py-1 text-sm border-2 border-black rounded-lg font-semibold"
-      >
-        {packaging}
-      </button>
-    ));
+    return Object.keys(salt.salt_forms_json[form]?.[strength] || {}).map((packagingId, packagingIndex) => {
+      const packagingValues = salt.salt_forms_json[form][strength][packagingId];
+      const allValuesNull = packagingValues === null || Object.values(packagingValues).every(val => val === null);
+      return (
+        <button
+          key={packagingIndex}
+          className={`px-2 py-1 text-sm border-2 rounded-lg font-semibold ${
+            selectedValues[index]?.packaging === packagingId ? 'border-black' : 'border-black/30'
+          } ${allValuesNull ? 'border-dotted' : ''}`}
+          onClick={() => {
+            setSelectedValues((prev) => ({ ...prev, [index]: { ...prev[index], packaging: packagingId } }));
+          }}
+        >
+          {packagingId}
+        </button>
+      );
+    });
   };
+  
+  
 
   return (
     <div className="w-full min-h-screen flex gap-10 flex-col items-center py-14">
       <button className="bg-blue-600 px-4 py-2 rounded-md" onClick={getData}>
         Get data
       </button>
-      <h1 className="text-2xl font-medium tracking-wider">
-        Cappsule Web Development
-      </h1>
+      <h1 className="text-2xl font-medium tracking-wider">Cappsule Web Development</h1>
       <div className="shadow-[0_0_20px_#00000038] w-[70vw] h-14 rounded-[30px] flex justify-between items-center px-10">
         <div className="relative">
           <GoSearch className={`text-2xl ${textInput ? "hidden" : "block"}`} />
@@ -248,7 +323,7 @@ function App() {
               <div className="min-h-full w-[25%] flex flex-col justify-center items-center">
                 <h3 className="font-bold">{salt.salt}</h3>
                 <p className="font-medium text-blue-900">
-                  Tablet | 100mg | 5 strips
+                {selectedValues[index]?.form} | {selectedValues[index]?.strength} | {selectedValues[index]?.packaging}
                 </p>
               </div>
               <div className="min-h-full w-[25%] flex justify-center items-center">
